@@ -89,39 +89,21 @@
             max-width: 100%;
             min-height: 120px;
             box-sizing: border-box;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .header-icon-wrapper {
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 180px;
-            height: 180px;
-            background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 140, 66, 0.05));
-            border: 2px solid rgba(255, 107, 53, 0.3);
-            border-radius: 24px;
-            box-shadow: 0 8px 30px rgba(255, 107, 53, 0.2);
-            animation: pulse 2s infinite ease-in-out;
-            flex-shrink: 0;
-            box-sizing: border-box;
+            display: none; /* No se usa en el HTML actual */
         }
 
         .header-icon {
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 4.5rem;
-            width: 120px;
-            height: 120px;
+            font-size: 4rem;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 15px auto;
             background: linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(255, 140, 66, 0.1) 100%);
             border-radius: 20px;
             border: 2px solid rgba(255, 107, 53, 0.3);
@@ -129,6 +111,8 @@
             filter: drop-shadow(0 4px 15px rgba(255, 107, 53, 0.3));
             box-sizing: border-box;
             flex-shrink: 0;
+            overflow: visible;
+            line-height: 1;
         }
 
         .header-text,
@@ -190,10 +174,10 @@
 
         /* Botón Admin - Sutil en esquina superior derecha */
         .admin-button {
-            position: absolute;
+            position: fixed;
             top: 15px;
             right: 15px;
-            z-index: 100;
+            z-index: 1000;
             padding: 8px 16px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.15);
@@ -204,12 +188,18 @@
             cursor: pointer;
             transition: all 0.3s ease;
             backdrop-filter: blur(5px);
+            pointer-events: auto;
+            user-select: none;
         }
 
         .admin-button:hover {
             background: rgba(255, 107, 53, 0.15);
             border-color: rgba(255, 107, 53, 0.4);
             color: #ff8c42;
+        }
+
+        .admin-button:active {
+            transform: scale(0.95);
         }
 
         /* Grid de Rankings */
@@ -1041,6 +1031,8 @@
                 height: 100px;
                 font-size: 4rem;
                 margin: 0 auto 15px auto;
+                overflow: visible;
+                line-height: 1;
             }
 
             .header h1 {

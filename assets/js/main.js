@@ -529,30 +529,32 @@
 
             if (adminBtn) {
                 // Remover listeners anteriores si existen
-                adminBtn.replaceWith(adminBtn.cloneNode(true));
-                const newAdminBtn = document.getElementById('admin-btn');
+                const newAdminBtn = adminBtn.cloneNode(true);
+                adminBtn.parentNode.replaceChild(newAdminBtn, adminBtn);
                 
                 newAdminBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     console.log('✅ Botón admin clickeado');
                     openAdminModal();
+                    return false;
                 });
                 console.log('✅ Listener agregado al botón admin');
-                    } else {
+            } else {
                 console.error('❌ No se encontró el botón admin-btn');
             }
 
             if (adminClose) {
                 // Remover listeners anteriores si existen
-                adminClose.replaceWith(adminClose.cloneNode(true));
-                const newAdminClose = document.getElementById('admin-close');
+                const newAdminClose = adminClose.cloneNode(true);
+                adminClose.parentNode.replaceChild(newAdminClose, adminClose);
                 
                 newAdminClose.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     console.log('✅ Botón cerrar clickeado');
                     closeAdminModal();
+                    return false;
                 });
                 console.log('✅ Listener agregado al botón cerrar');
             } else {
