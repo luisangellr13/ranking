@@ -5,22 +5,42 @@
     // Detectar si estamos en la página de admin
     const isAdminPage = window.location.pathname.includes('admin.html');
 
-    // Configuración compartida
+    // ========== CONFIGURACIÓN - CAMBIAR AQUÍ ==========
+    // 
+    // Para usar servidor LOCAL (desarrollo):
+    //   - Cambia USE_LOCAL_SERVER a true
+    //   - Asegúrate de tener el servidor corriendo: python3 server.py
+    //
+    // Para usar servidor EXTERNO (Render - producción):
+    //   - Cambia USE_LOCAL_SERVER a false
+    //   - El código usará automáticamente el servidor de Render
+    //
+    const USE_LOCAL_SERVER = false; // 👈 CAMBIA ESTO: true = local, false = Render
+    
+    // URLs de los servidores
+    const LOCAL_SERVER_URL = 'http://localhost:8000';
+    const RENDER_API_URL = 'https://ranking-81qv.onrender.com';
+    
     // Detectar si estamos en producción (no localhost)
     const isProduction = window.location.hostname !== 'localhost' && 
                         window.location.hostname !== '127.0.0.1' &&
                         !window.location.hostname.startsWith('192.168.');
     
-    // URL del servicio en Render
-    const RENDER_API_URL = 'https://rankingweb.onrender.com';
-    
+    // Configuración compartida
     const CONFIG = {
         ROOT_EMAIL: 'luisangellr13@gmail.com',
         ROOT_PASSWORD: 'Luis1309*',
         DATA_URL: 'assets/data/ranking.json',
-        API_BASE: isProduction ? RENDER_API_URL : 'http://localhost:8000',
-        USE_API: true // Ahora usamos API tanto en desarrollo como en producción
+        // Si USE_LOCAL_SERVER es true, usa local. Si es false, usa Render en producción o local en desarrollo
+        API_BASE: USE_LOCAL_SERVER ? LOCAL_SERVER_URL : (isProduction ? RENDER_API_URL : LOCAL_SERVER_URL),
+        USE_API: true // Siempre usar API
     };
+    
+    console.log('🔧 Configuración del servidor:', {
+        USE_LOCAL_SERVER: USE_LOCAL_SERVER,
+        isProduction: isProduction,
+        API_BASE: CONFIG.API_BASE
+    });
 
     // ========== CÓDIGO PARA INDEX.HTML ==========
     if (!isAdminPage) {
