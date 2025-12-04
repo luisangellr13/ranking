@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ranking de colaboradores y áreas organizacionales">
+    <title>Ranking - Colaboradores & Áreas</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <button id="admin-btn" class="admin-button" aria-label="Abrir panel de administración">
+            ⚙️ Admin
+        </button>
+
+        <div id="admin-modal" class="admin-modal" role="dialog" aria-labelledby="admin-modal-title" aria-hidden="true">
+            <div class="admin-modal-content">
+                <span class="admin-close" id="admin-close" aria-label="Cerrar modal">&times;</span>
+                <h2 id="admin-modal-title" style="font-weight: 700; color: var(--apple-text, #ecf0f5); margin-bottom: 20px;">Acceso de Administrador</h2>
+                <p style="color: #a8c5dd; margin-bottom: 20px; text-align: center; font-size: 0.9rem;">Ingresa tus credenciales de acceso</p>
+                <form id="login-form" novalidate>
+                    <div class="form-group">
+                        <label for="admin-email">Correo electrónico</label>
+                        <input type="email" id="admin-email" required autocomplete="email" aria-required="true" placeholder="tu-email@ejemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-password">Contraseña</label>
+                        <input type="password" id="admin-password" required autocomplete="current-password" aria-required="true" placeholder="••••••••">
+                    </div>
+                    <div id="login-error" class="login-error" role="alert" aria-live="polite" style="display: none;"></div>
+                    <button type="submit" class="btn-login">Iniciar Sesión</button>
+                </form>
+                <div style="margin-top:14px; text-align:center; font-size: 0.85rem; color: #a8c5dd;">
+                    Solo usuarios autorizados pueden acceder
+                </div>
+            </div>
+        </div>
+
+        <header class="header">
+            <div class="header-content">
+                <div class="header-icon" aria-hidden="true">🏆</div>
+                <div class="header-text">
+                    <h1>Ranking Organizacional</h1>
+                    <p>Desempeño, Excelencia y Reconocimiento</p>
+                    <div class="header-subtitle" aria-hidden="true">⭐ Destacando el Talento de Nuestro Equipo</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="rankings-grid">
+            <section class="ranking-card" aria-labelledby="people-ranking-title">
+                <h3 id="people-ranking-title"><span class="icon" aria-hidden="true">👥</span> Ranking Individual</h3>
+                <div class="ranking-table">
+                    <div class="search-bar">
+                        <input id="search-input" class="search-input" type="search" placeholder="Buscar por nombre o área..." aria-label="Buscar colaboradores">
+                        <button id="search-clear" class="search-clear" title="Limpiar búsqueda" aria-label="Limpiar búsqueda">✖</button>
+                        <div id="search-count" class="search-count" aria-live="polite">— resultados</div>
+                    </div>
+                    <div class="table-header" aria-hidden="true">
+                        <div style="flex:1">Nombre</div>
+                        <div style="width:180px; text-align:right">Posición & Puntos</div>
+                    </div>
+                    <div id="ranking-container" role="list" aria-label="Lista de colaboradores">
+                        <!-- Los datos se cargarán dinámicamente -->
+                    </div>
+                    <div id="pagination-controls" class="pagination-controls" style="display: none;">
+                        <button id="prev-page" class="pagination-btn" aria-label="Página anterior">‹ Anterior</button>
+                        <span id="page-info" class="page-info">Página 1 de 1</span>
+                        <button id="next-page" class="pagination-btn" aria-label="Página siguiente">Siguiente ›</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="ranking-card" aria-labelledby="area-ranking-title">
+                <h3 id="area-ranking-title"><span class="icon" aria-hidden="true">🏢</span> Ranking por Área</h3>
+                <div class="search-bar">
+                    <input id="search-input-area" class="search-input" type="search" placeholder="Buscar áreas..." aria-label="Buscar áreas">
+                    <button id="search-clear-area" class="search-clear" title="Limpiar búsqueda" aria-label="Limpiar búsqueda">✖</button>
+                    <div id="search-count-area" class="search-count" aria-live="polite">— resultados</div>
+                </div>
+                <div class="ranking-compact" id="ranking-compact" role="list" aria-label="Lista de áreas">
+                    <!-- Lista por área: posición, área, puntos totales -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
+

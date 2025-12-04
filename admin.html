@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Panel de administración - Ranking de Colaboradores">
+    <title>Admin - Ranking de Colaboradores</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1>⚙️ Panel de Administración</h1>
+            <div class="admin-header-actions">
+                <span id="admin-user-email" class="admin-user"></span>
+                <a href="index.html" class="btn-back">← Volver al Ranking</a>
+                <button id="logout-btn" class="btn-logout">Cerrar Sesión</button>
+            </div>
+        </header>
+
+        <main class="admin-main">
+            <!-- Sección de Colaboradores -->
+            <section class="admin-section">
+                <div class="section-header">
+                    <h2>👥 Gestión de Colaboradores</h2>
+                    <div class="section-actions">
+                        <button id="add-person-btn" class="btn-primary">+ Agregar Colaborador</button>
+                        <button id="import-csv-people" class="btn-secondary">📥 Importar CSV</button>
+                        <button id="export-csv-people" class="btn-secondary">📤 Exportar CSV</button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="admin-table" id="people-table">
+                        <thead>
+                            <tr>
+                                <th>Posición</th>
+                                <th>Nombre</th>
+                                <th>Área</th>
+                                <th>Cargo</th>
+                                <th>Puntos</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="people-tbody">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Sección de Áreas -->
+            <section class="admin-section">
+                <div class="section-header">
+                    <h2>🏢 Ranking por Áreas</h2>
+                    <div class="section-actions">
+                        <button id="export-csv-areas" class="btn-secondary">📤 Exportar CSV</button>
+                    </div>
+                </div>
+                <p style="color: #a8c5dd; margin-bottom: 15px; font-size: 0.9rem; padding: 10px; background: rgba(255, 107, 53, 0.1); border-radius: 8px; border-left: 3px solid #ff8c42;">
+                    ℹ️ Las áreas se calculan automáticamente a partir de los colaboradores registrados.
+                </p>
+                <div class="table-container">
+                    <table class="admin-table" id="areas-table">
+                        <thead>
+                            <tr>
+                                <th>Posición</th>
+                                <th>Área</th>
+                                <th>Puntos Totales</th>
+                                <th>Colaboradores</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="areas-tbody">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Sección de Usuarios (solo para root) -->
+            <section class="admin-section" id="users-section" style="display: none;">
+                <div class="section-header">
+                    <h2>👤 Gestión de Usuarios</h2>
+                    <div class="section-actions">
+                        <button id="add-user-btn" class="btn-primary">+ Agregar Usuario</button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="admin-table" id="users-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Rol</th>
+                                <th>Fecha Creación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-tbody">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal para agregar/editar colaborador -->
+    <div id="person-modal" class="admin-modal">
+        <div class="admin-modal-content">
+            <span class="admin-close" id="close-person-modal">&times;</span>
+            <h2 id="person-modal-title">Agregar Colaborador</h2>
+            <form id="person-form">
+                <div class="form-group">
+                    <label for="person-name">Nombre *</label>
+                    <input type="text" id="person-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="person-area">Área *</label>
+                    <input type="text" id="person-area" required>
+                </div>
+                <div class="form-group">
+                    <label for="person-cargo">Cargo</label>
+                    <input type="text" id="person-cargo">
+                </div>
+                <div class="form-group">
+                    <label for="person-puntos">Puntos *</label>
+                    <input type="number" id="person-puntos" required min="0" step="1">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" id="cancel-person">Cancelar</button>
+                    <button type="submit" class="btn-save">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para agregar/editar usuario -->
+    <div id="user-modal" class="admin-modal">
+        <div class="admin-modal-content">
+            <span class="admin-close" id="close-user-modal">&times;</span>
+            <h2 id="user-modal-title">Agregar Usuario</h2>
+            <form id="user-form">
+                <div class="form-group">
+                    <label for="user-name">Nombre *</label>
+                    <input type="text" id="user-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="user-email">Email *</label>
+                    <input type="email" id="user-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="user-password">Contraseña *</label>
+                    <input type="password" id="user-password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="user-role">Rol</label>
+                    <select id="user-role" required>
+                        <option value="user">Usuario</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" id="cancel-user">Cancelar</button>
+                    <button type="submit" class="btn-save">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Input oculto para importar CSV -->
+    <input type="file" id="csv-file-input-people" accept=".csv" style="display: none;">
+
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
+
