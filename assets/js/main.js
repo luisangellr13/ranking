@@ -512,7 +512,16 @@
 
         // ========== Admin Modal ==========
 
+        // Variable para evitar múltiples configuraciones
+        let adminModalSetup = false;
+
         function setupAdminModal() {
+            // Evitar configurar múltiples veces
+            if (adminModalSetup) {
+                console.log('⚠️ Modal admin ya está configurado, omitiendo...');
+                return;
+            }
+            
             console.log('🔧 Configurando modal admin...');
             
             const adminBtn = document.getElementById('admin-btn');
@@ -528,34 +537,44 @@
             });
 
             if (adminBtn) {
-                // Remover listeners anteriores si existen
-                const newAdminBtn = adminBtn.cloneNode(true);
-                adminBtn.parentNode.replaceChild(newAdminBtn, adminBtn);
-                
-                newAdminBtn.addEventListener('click', function(e) {
+                // Usar onclick directamente en lugar de clonar (más simple y confiable)
+                adminBtn.onclick = function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     console.log('✅ Botón admin clickeado');
                     openAdminModal();
                     return false;
-                });
+                };
+                // También agregar listener para compatibilidad
+                adminBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('✅ Botón admin clickeado (listener)');
+                    openAdminModal();
+                    return false;
+                }, { once: false, passive: false });
                 console.log('✅ Listener agregado al botón admin');
             } else {
                 console.error('❌ No se encontró el botón admin-btn');
             }
 
             if (adminClose) {
-                // Remover listeners anteriores si existen
-                const newAdminClose = adminClose.cloneNode(true);
-                adminClose.parentNode.replaceChild(newAdminClose, adminClose);
-                
-                newAdminClose.addEventListener('click', function(e) {
+                // Usar onclick directamente
+                adminClose.onclick = function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     console.log('✅ Botón cerrar clickeado');
                     closeAdminModal();
                     return false;
-                });
+                };
+                // También agregar listener
+                adminClose.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('✅ Botón cerrar clickeado (listener)');
+                    closeAdminModal();
+                    return false;
+                }, { once: false, passive: false });
                 console.log('✅ Listener agregado al botón cerrar');
             } else {
                 console.error('❌ No se encontró el botón admin-close');
@@ -581,14 +600,17 @@
                 console.error('❌ No se encontró el formulario login-form');
             }
 
-            // Cerrar con ESC
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && adminModal && adminModal.classList.contains('active')) {
-                    console.log('✅ Tecla ESC presionada, cerrando modal...');
-                    closeAdminModal();
-                }
-            });
+            // Cerrar con ESC (solo una vez)
+            if (!adminModalSetup) {
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && adminModal && adminModal.classList.contains('active')) {
+                        console.log('✅ Tecla ESC presionada, cerrando modal...');
+                        closeAdminModal();
+                    }
+                });
+            }
             
+            adminModalSetup = true;
             console.log('✅ Modal admin configurado');
         }
 
@@ -993,7 +1015,7 @@
                 }
                 
                 // SEGUNDO: Si el servidor falló, intentar localStorage
-                const stored = localStorage.getItem('rankingData');
+                let stored = localStorage.getItem('rankingData');
                 if (stored) {
                     try {
                         const parsed = JSON.parse(stored);
@@ -1029,7 +1051,7 @@
                 }
                 
                 // Intentar desde localStorage como último recurso
-                const stored = localStorage.getItem('rankingData');
+                stored = localStorage.getItem('rankingData');
                 if (stored) {
                     try {
                         rankingData = JSON.parse(stored);
@@ -1317,13 +1339,17 @@
                     localStorage.setItem('rankingData', JSON.stringify(rankingData));
                     console.log('💾 Caché local actualizado');
                     
-                    // Actualizar tablas inmediatamente
+                    // Actualizar tablas inmediatamente (si estamos en página admin)
                     if (typeof renderPeopleTable === 'function') {
+                        console.log('🔄 Actualizando tablas después de guardar...');
                         renderPeopleTable();
                         renderAreasTable();
+                        console.log('✅ Tablas actualizadas con', rankingData.length, 'colaboradores');
+                    } else {
+                        console.log('ℹ️ No estamos en página admin, las tablas se actualizarán al recargar');
                     }
                     
-                    return { success: true, message: result.message, savedToServer: true };
+                    return { success: true, message: result.message, savedToServer: true, count: result.count || rankingData.length };
                 } catch (error) {
                     console.error('❌ ERROR CRÍTICO: No se pudo guardar en el servidor de Render');
                     console.error('Detalles del error:', error);
@@ -1513,6 +1539,21 @@
                         if (saveResult && saveResult.success) {
                             console.log('✅ Datos importados y guardados correctamente');
                             console.log(`📊 Confirmación del servidor: ${saveResult.count || rankingData.length} colaboradores guardados`);
+                            
+                            // ACTUALIZAR TABLAS EXPLÍCITAMENTE después de guardar
+                            if (typeof renderPeopleTable === 'function') {
+                                console.log('🔄 Actualizando tablas después de importación...');
+                                renderPeopleTable();
+                                renderAreasTable();
+                                console.log('✅ Tablas actualizadas');
+                            } else {
+                                console.warn('⚠️ renderPeopleTable no está disponible, recargando página...');
+                                // Si no están disponibles las funciones de render, recargar la página
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 1000);
+                            }
+                            
                             alert(`✅ ${data.length} colaboradores importados y guardados correctamente en el servidor`);
                         } else {
                             console.error('❌ Error al guardar:', saveResult);
