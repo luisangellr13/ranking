@@ -1267,17 +1267,37 @@
             console.log('💾 Guardando datos...', rankingData.length, 'colaboradores');
             console.log('🔧 Configuración:', { USE_API: CONFIG.USE_API, API_BASE: CONFIG.API_BASE, isProduction });
             
+            // Validar que tenemos datos
+            if (!Array.isArray(rankingData)) {
+                console.error('❌ rankingData no es un array:', typeof rankingData);
+                return { success: false, error: 'Datos inválidos: no es un array' };
+            }
+            
+            if (rankingData.length === 0) {
+                console.warn('⚠️ No hay datos para guardar (array vacío)');
+                return { success: false, error: 'No hay datos para guardar' };
+            }
+            
             // SIEMPRE intentar guardar en el servidor primero (si está configurado)
             if (CONFIG.USE_API && CONFIG.API_BASE) {
                 try {
+                    const payload = { data: rankingData };
+                    const payloadString = JSON.stringify(payload);
+                    const payloadSize = payloadString.length;
+                    
                     console.log('📤 Enviando datos al servidor de Render...', CONFIG.API_BASE + '/api/ranking/save');
+                    console.log(`📊 Detalles del payload:`);
+                    console.log(`   - Total de colaboradores: ${rankingData.length}`);
+                    console.log(`   - Tamaño del JSON: ${payloadSize} caracteres (${(payloadSize / 1024).toFixed(2)} KB)`);
+                    console.log(`   - Primeros 3 registros:`, rankingData.slice(0, 3));
+                    console.log(`   - Últimos 3 registros:`, rankingData.slice(-3));
                     
                     const response = await fetch(CONFIG.API_BASE + '/api/ranking/save', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ data: rankingData })
+                        body: payloadString
                     });
                     
                     console.log('📥 Respuesta del servidor:', response.status, response.statusText);
@@ -1473,15 +1493,29 @@
                         return;
                     }
 
+                    console.log('📊 Resumen de importación:');
+                    console.log(`   - Total de líneas procesadas: ${lines.length}`);
+                    console.log(`   - Registros válidos: ${data.length}`);
+                    console.log(`   - Tamaño del JSON: ${JSON.stringify(data).length} caracteres`);
+                    
                     if (confirm(`¿Deseas REEMPLAZAR todos los colaboradores actuales con ${data.length} registros del CSV?`)) {
                         // Reemplazar datos completamente
                         rankingData = data;
                         
-                        // Guardar y esperar a que termine
-                        await saveRankingData();
+                        console.log(`💾 Preparando para guardar ${rankingData.length} colaboradores en el servidor...`);
+                        console.log(`📦 Tamaño del payload: ${JSON.stringify({ data: rankingData }).length} caracteres`);
                         
-                        console.log('✅ Datos importados y guardados correctamente');
-                        alert(`✅ ${data.length} colaboradores importados y guardados correctamente`);
+                        // Guardar y esperar a que termine
+                        const saveResult = await saveRankingData();
+                        
+                        if (saveResult && saveResult.success) {
+                            console.log('✅ Datos importados y guardados correctamente');
+                            console.log(`📊 Confirmación del servidor: ${saveResult.count || rankingData.length} colaboradores guardados`);
+                            alert(`✅ ${data.length} colaboradores importados y guardados correctamente en el servidor`);
+                        } else {
+                            console.error('❌ Error al guardar:', saveResult);
+                            alert(`⚠️ Se importaron ${data.length} registros pero hubo un problema al guardar en el servidor. Verifica la consola para más detalles.`);
+                        }
                     }
                 } catch (error) {
                     console.error('Error al procesar el archivo:', error);

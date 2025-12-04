@@ -94,10 +94,27 @@ class RankingHandler(http.server.SimpleHTTPRequestHandler):
         """Guarda los datos del ranking en el archivo JSON"""
         try:
             content_length = int(self.headers.get('Content-Length', 0))
-            print(f'📥 Recibiendo {content_length} bytes...')
+            print(f'📥 Recibiendo {content_length} bytes ({content_length / 1024:.2f} KB)...')
             
-            body = self.rfile.read(content_length)
-            data = json.loads(body.decode('utf-8'))
+            # Leer todo el body sin límites
+            body = b''
+            remaining = content_length
+            chunk_size = 8192  # Leer en chunks de 8KB
+            
+            while remaining > 0:
+                chunk = self.rfile.read(min(chunk_size, remaining))
+                if not chunk:
+                    break
+                body += chunk
+                remaining -= len(chunk)
+            
+            print(f'📦 Body leído: {len(body)} bytes')
+            
+            # Decodificar y parsear JSON
+            body_text = body.decode('utf-8')
+            print(f'📝 Texto decodificado: {len(body_text)} caracteres')
+            
+            data = json.loads(body_text)
             
             print(f'📦 Datos recibidos: {list(data.keys())}')
             
@@ -110,17 +127,33 @@ class RankingHandler(http.server.SimpleHTTPRequestHandler):
                 print('❌ POST /api/ranking/save - Datos inválidos')
                 return
             
+            count = len(data['data'])
+            print(f'📊 Total de registros recibidos: {count}')
+            
             ranking_data = {'ranking': data['data']}
             
             # Crear directorio si no existe
             os.makedirs(os.path.dirname(RANKING_FILE), exist_ok=True)
             
-            # Guardar archivo
+            # Guardar archivo (sin límite de tamaño)
+            print(f'💾 Guardando {count} colaboradores en {RANKING_FILE}...')
             with open(RANKING_FILE, 'w', encoding='utf-8') as f:
                 json.dump(ranking_data, f, indent=2, ensure_ascii=False)
             
-            count = len(data['data'])
-            print(f'✅ POST /api/ranking/save - {count} colaboradores guardados')
+            # Verificar que se guardó correctamente
+            file_size = os.path.getsize(RANKING_FILE)
+            print(f'✅ Archivo guardado: {file_size} bytes ({file_size / 1024:.2f} KB)')
+            
+            # Verificar que se puede leer correctamente
+            with open(RANKING_FILE, 'r', encoding='utf-8') as f:
+                verify_data = json.load(f)
+                verify_count = len(verify_data.get('ranking', []))
+                print(f'✅ Verificación: {verify_count} colaboradores en archivo')
+                
+                if verify_count != count:
+                    print(f'⚠️ ADVERTENCIA: Se recibieron {count} pero se guardaron {verify_count}')
+            
+            print(f'✅ POST /api/ranking/save - {count} colaboradores guardados exitosamente')
             
             self.send_response(200)
             self.send_cors_headers()
@@ -130,7 +163,8 @@ class RankingHandler(http.server.SimpleHTTPRequestHandler):
             response = {
                 'success': True,
                 'message': f'Se guardaron {count} colaboradores en ranking.json',
-                'count': count
+                'count': count,
+                'file_size': file_size
             }
             self.wfile.write(json.dumps(response, ensure_ascii=False).encode('utf-8'))
             

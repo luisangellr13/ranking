@@ -1586,3 +1586,29 @@
                 padding-right: 10px;
             }
         }
+
+        /* Version Footer */
+        .version-footer {
+            text-align: center;
+            padding: 10px 0;
+            margin-top: 20px;
+            opacity: 0.4;
+        }
+
+        .version-text {
+            font-size: 0.65rem;
+            color: rgba(236, 240, 245, 0.5);
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 768px) {
+            .version-footer {
+                padding: 8px 0;
+                margin-top: 15px;
+            }
+
+            .version-text {
+                font-size: 0.6rem;
+            }
+        }
