@@ -1219,11 +1219,65 @@
 
             if (originalIndex < 0 || originalIndex >= rankingData.length) {
                 console.error('Índice inválido:', originalIndex);
+                alert('❌ Error: Índice inválido');
                 return;
             }
 
-            rankingData.splice(originalIndex, 1);
-            await saveRankingData();
+            // Guardar el estado anterior para poder revertir si falla
+            const previousData = [...rankingData];
+            const personToDelete = rankingData[originalIndex];
+            
+            try {
+                console.log(`🗑️ Eliminando colaborador #${originalIndex}:`, personToDelete);
+                
+                // Eliminar del array
+                rankingData.splice(originalIndex, 1);
+                
+                // Guardar en el servidor y esperar confirmación
+                console.log('💾 Guardando cambios después de eliminar...');
+                const saveResult = await saveRankingData();
+                
+                if (!saveResult || !saveResult.success) {
+                    // Revertir cambios si falla el guardado
+                    console.error('❌ Error al guardar, revirtiendo eliminación...');
+                    rankingData = previousData;
+                    
+                    const errorMsg = saveResult?.error || 'Error desconocido al guardar';
+                    alert(`❌ Error al eliminar el colaborador:\n\n${errorMsg}\n\nLa eliminación no se guardó.`);
+                    
+                    // Actualizar tablas con datos anteriores
+                    if (typeof renderPeopleTable === 'function') {
+                        renderPeopleTable();
+                        renderAreasTable();
+                    }
+                    return;
+                }
+
+                console.log('✅ Colaborador eliminado exitosamente:', saveResult);
+                
+                // Actualizar tablas explícitamente después de eliminar exitosamente
+                if (typeof renderPeopleTable === 'function') {
+                    console.log('🔄 Actualizando tablas después de eliminar colaborador...');
+                    renderPeopleTable();
+                    renderAreasTable();
+                    console.log('✅ Tablas actualizadas con', rankingData.length, 'colaboradores');
+                }
+                
+                console.log(`✅ Colaborador eliminado y guardado permanentemente en el servidor`);
+                
+            } catch (error) {
+                // Revertir cambios si hay un error
+                console.error('❌ Error inesperado al eliminar:', error);
+                rankingData = previousData;
+                
+                // Actualizar tablas con datos anteriores
+                if (typeof renderPeopleTable === 'function') {
+                    renderPeopleTable();
+                    renderAreasTable();
+                }
+                
+                alert(`❌ Error inesperado al eliminar:\n\n${error.message}\n\nLa eliminación no se guardó.`);
+            }
         };
 
         window.viewAreaDetails = function(area) {
@@ -1289,16 +1343,64 @@
                 return;
             }
 
-            if (editingPersonId !== null && editingPersonId !== -1) {
-                // Editar
-                rankingData[editingPersonId] = { nombre, area, cargo, puntos };
-            } else {
-                // Agregar nuevo
-                rankingData.push({ nombre, area, cargo, puntos });
-            }
+            // Guardar el estado anterior para poder revertir si falla
+            const previousData = [...rankingData];
+            
+            try {
+                if (editingPersonId !== null && editingPersonId !== -1) {
+                    // Editar
+                    console.log(`✏️ Editando colaborador #${editingPersonId}:`, { nombre, area, cargo, puntos });
+                    rankingData[editingPersonId] = { nombre, area, cargo, puntos };
+                } else {
+                    // Agregar nuevo
+                    console.log(`➕ Agregando nuevo colaborador:`, { nombre, area, cargo, puntos });
+                    rankingData.push({ nombre, area, cargo, puntos });
+                }
 
-            await saveRankingData();
-            closePersonModal();
+                // Guardar en el servidor y esperar confirmación
+                console.log('💾 Guardando cambios...');
+                const saveResult = await saveRankingData();
+                
+                if (!saveResult || !saveResult.success) {
+                    // Revertir cambios si falla el guardado
+                    console.error('❌ Error al guardar, revirtiendo cambios...');
+                    rankingData = previousData;
+                    
+                    const errorMsg = saveResult?.error || 'Error desconocido al guardar';
+                    alert(`❌ Error al guardar los datos:\n\n${errorMsg}\n\nLos cambios no se guardaron.`);
+                    return;
+                }
+
+                console.log('✅ Colaborador guardado exitosamente:', saveResult);
+                
+                // Actualizar tablas explícitamente después de guardar exitosamente
+                if (typeof renderPeopleTable === 'function') {
+                    console.log('🔄 Actualizando tablas después de guardar colaborador...');
+                    renderPeopleTable();
+                    renderAreasTable();
+                    console.log('✅ Tablas actualizadas con', rankingData.length, 'colaboradores');
+                }
+                
+                // Cerrar modal solo después de guardar exitosamente
+                closePersonModal();
+                
+                // Mostrar confirmación breve
+                const action = editingPersonId !== null && editingPersonId !== -1 ? 'actualizado' : 'agregado';
+                console.log(`✅ Colaborador ${action} y guardado permanentemente en el servidor`);
+                
+            } catch (error) {
+                // Revertir cambios si hay un error
+                console.error('❌ Error inesperado al guardar:', error);
+                rankingData = previousData;
+                
+                // Actualizar tablas con datos anteriores
+                if (typeof renderPeopleTable === 'function') {
+                    renderPeopleTable();
+                    renderAreasTable();
+                }
+                
+                alert(`❌ Error inesperado al guardar:\n\n${error.message}\n\nLos cambios no se guardaron.`);
+            }
         }
 
         // ========== Guardar datos ==========
