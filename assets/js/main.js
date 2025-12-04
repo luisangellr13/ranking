@@ -713,26 +713,42 @@
 
         async function loadRankingData() {
             try {
-                // PRIMERO: En producción, siempre cargar desde el servidor primero
-                // En desarrollo local, puede usar localStorage primero para desarrollo rápido
-                if (CONFIG.USE_API && CONFIG.API_BASE && isProduction) {
-                    // En producción: priorizar servidor
+                // PRIMERO: SIEMPRE intentar cargar desde el servidor de Render (si está configurado)
+                if (CONFIG.USE_API && CONFIG.API_BASE) {
                     try {
-                        const response = await fetch(CONFIG.API_BASE + '/api/ranking');
+                        console.log('📥 Intentando cargar desde servidor de Render...', CONFIG.API_BASE + '/api/ranking');
+                        const response = await fetch(CONFIG.API_BASE + '/api/ranking', {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            cache: 'no-cache'
+                        });
+                        
                         if (response.ok) {
                             const data = await response.json();
                             if (data && Array.isArray(data.ranking) && data.ranking.length > 0) {
                                 rankingData = validateRankingData(data.ranking);
-                                console.log('✅ Datos cargados desde servidor (producción):', rankingData.length, 'colaboradores');
-                                // Guardar en localStorage como caché
+                                console.log('✅ Datos cargados desde servidor de Render:', rankingData.length, 'colaboradores');
+                                // Guardar en localStorage como caché (después de cargar del servidor)
                                 localStorage.setItem('rankingData', JSON.stringify(rankingData));
+                                console.log('💾 Caché local actualizado con datos del servidor');
                                 renderRanking();
                                 return;
+                            } else if (data && Array.isArray(data.ranking) && data.ranking.length === 0) {
+                                console.log('📭 Servidor devolvió lista vacía, usando datos locales como respaldo');
+                            } else {
+                                console.warn('⚠️ Formato de datos inesperado del servidor:', data);
                             }
+                        } else {
+                            console.warn('⚠️ Servidor respondió con error:', response.status, response.statusText);
                         }
                     } catch (apiError) {
-                        console.log('⚠️ Servidor no disponible, usando caché local');
+                        console.error('❌ Error al cargar desde servidor de Render:', apiError);
+                        console.log('⚠️ Usando caché local como respaldo temporal');
                     }
+                } else {
+                    console.warn('⚠️ No hay servidor configurado, usando datos locales');
                 }
                 
                 // SEGUNDO: Si estamos en desarrollo o el servidor falló, intentar localStorage
@@ -815,7 +831,15 @@
         async function updateFromServerInBackground() {
             if (CONFIG.USE_API && CONFIG.API_BASE) {
                 try {
-                    const response = await fetch(CONFIG.API_BASE + '/api/ranking');
+                    console.log('🔄 Verificando actualizaciones desde servidor de Render...');
+                    const response = await fetch(CONFIG.API_BASE + '/api/ranking', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        cache: 'no-cache'
+                    });
+                    
                     if (response.ok) {
                         const data = await response.json();
                         if (data && Array.isArray(data.ranking)) {
@@ -824,12 +848,19 @@
                             const serverDataStr = JSON.stringify(serverData);
                             const currentDataStr = JSON.stringify(rankingData);
                             if (serverDataStr !== currentDataStr) {
-                                console.log('🔄 Actualizando desde servidor (datos diferentes detectados)');
+                                console.log('🔄 Actualizando desde servidor de Render (datos diferentes detectados)');
+                                console.log('📊 Datos anteriores:', rankingData.length, 'colaboradores');
+                                console.log('📊 Datos nuevos del servidor:', serverData.length, 'colaboradores');
                                 rankingData = serverData;
                                 localStorage.setItem('rankingData', JSON.stringify(rankingData));
+                                console.log('✅ Datos actualizados desde servidor de Render');
                                 renderRanking();
+                            } else {
+                                console.log('✅ Los datos locales están sincronizados con el servidor');
                             }
                         }
+                    } else {
+                        console.warn('⚠️ No se pudo verificar actualizaciones del servidor:', response.status);
                     }
                 } catch (e) {
                     // Silencioso, solo en segundo plano
@@ -917,28 +948,46 @@
 
         async function loadRankingData() {
             try {
-                // PRIMERO: Intentar cargar desde API del servidor (siempre que esté disponible)
+                // PRIMERO: SIEMPRE intentar cargar desde el servidor de Render (si está configurado)
                 if (CONFIG.USE_API && CONFIG.API_BASE) {
                     try {
-                        const response = await fetch(CONFIG.API_BASE + '/api/ranking');
+                        console.log('📥 [ADMIN] Intentando cargar desde servidor de Render...', CONFIG.API_BASE + '/api/ranking');
+                        const response = await fetch(CONFIG.API_BASE + '/api/ranking', {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            cache: 'no-cache'
+                        });
+                        
                         if (response.ok) {
                             const data = await response.json();
                             if (data && Array.isArray(data.ranking) && data.ranking.length > 0) {
                                 rankingData = validateRankingData(data.ranking);
                                 
-                                console.log('✅ Datos cargados desde servidor:', rankingData.length, 'colaboradores');
+                                console.log('✅ [ADMIN] Datos cargados desde servidor de Render:', rankingData.length, 'colaboradores');
                                 
-                                // Guardar en localStorage como respaldo
+                                // Guardar en localStorage como caché (después de cargar del servidor)
                                 localStorage.setItem('rankingData', JSON.stringify(rankingData));
+                                console.log('💾 [ADMIN] Caché local actualizado con datos del servidor');
                                 
                                 renderPeopleTable();
                                 renderAreasTable();
                                 return;
+                            } else if (data && Array.isArray(data.ranking) && data.ranking.length === 0) {
+                                console.log('📭 [ADMIN] Servidor devolvió lista vacía, usando datos locales como respaldo');
+                            } else {
+                                console.warn('⚠️ [ADMIN] Formato de datos inesperado del servidor:', data);
                             }
+                        } else {
+                            console.warn('⚠️ [ADMIN] Servidor respondió con error:', response.status, response.statusText);
                         }
                     } catch (apiError) {
-                        console.log('⚠️ Servidor no disponible, intentando localStorage o archivo local');
+                        console.error('❌ [ADMIN] Error al cargar desde servidor de Render:', apiError);
+                        console.log('⚠️ [ADMIN] Usando caché local como respaldo temporal');
                     }
+                } else {
+                    console.warn('⚠️ [ADMIN] No hay servidor configurado, usando datos locales');
                 }
                 
                 // SEGUNDO: Si el servidor falló, intentar localStorage
@@ -1216,11 +1265,13 @@
 
         async function saveRankingData() {
             console.log('💾 Guardando datos...', rankingData.length, 'colaboradores');
+            console.log('🔧 Configuración:', { USE_API: CONFIG.USE_API, API_BASE: CONFIG.API_BASE, isProduction });
             
-            // PRIMERO: Guardar en el servidor (siempre que esté disponible)
+            // SIEMPRE intentar guardar en el servidor primero (si está configurado)
             if (CONFIG.USE_API && CONFIG.API_BASE) {
                 try {
-                    console.log('📤 Enviando datos al servidor...', CONFIG.API_BASE);
+                    console.log('📤 Enviando datos al servidor de Render...', CONFIG.API_BASE + '/api/ranking/save');
+                    
                     const response = await fetch(CONFIG.API_BASE + '/api/ranking/save', {
                         method: 'POST',
                         headers: {
@@ -1237,36 +1288,64 @@
                     }
                     
                     const result = await response.json();
-                    console.log('✅ Datos guardados en servidor:', result.message);
+                    console.log('✅ Datos guardados correctamente en servidor de Render:', result.message);
+                    console.log('📊 Total de colaboradores guardados:', result.count || rankingData.length);
                     
-                    // Guardar en localStorage como caché (después de guardar en servidor)
+                    // Guardar en localStorage como caché (SOLO después de guardar exitosamente en servidor)
                     localStorage.setItem('rankingData', JSON.stringify(rankingData));
+                    console.log('💾 Caché local actualizado');
                     
                     // Actualizar tablas inmediatamente
-                    renderPeopleTable();
-                    renderAreasTable();
-                    
-                    return { success: true, message: result.message };
-                } catch (error) {
-                    console.error('❌ Error guardando en servidor:', error);
-                    // Si falla el servidor, guardar en localStorage como respaldo
-                    localStorage.setItem('rankingData', JSON.stringify(rankingData));
-                    renderPeopleTable();
-                    renderAreasTable();
-                    
-                    // Mostrar alerta solo si estamos en producción
-                    if (isProduction) {
-                        alert('⚠️ No se pudo guardar en el servidor. Los datos se guardaron localmente.\n\nError: ' + error.message);
+                    if (typeof renderPeopleTable === 'function') {
+                        renderPeopleTable();
+                        renderAreasTable();
                     }
-                    return { success: false, error: error.message };
+                    
+                    return { success: true, message: result.message, savedToServer: true };
+                } catch (error) {
+                    console.error('❌ ERROR CRÍTICO: No se pudo guardar en el servidor de Render');
+                    console.error('Detalles del error:', error);
+                    
+                    // Guardar en localStorage como respaldo temporal
+                    localStorage.setItem('rankingData', JSON.stringify(rankingData));
+                    console.log('💾 Datos guardados en localStorage como respaldo temporal');
+                    
+                    // Actualizar tablas
+                    if (typeof renderPeopleTable === 'function') {
+                        renderPeopleTable();
+                        renderAreasTable();
+                    }
+                    
+                    // Mostrar alerta crítica en producción
+                    if (isProduction) {
+                        alert('⚠️ ERROR: No se pudo guardar en el servidor de Render.\n\n' +
+                              'Los datos se guardaron localmente como respaldo temporal.\n\n' +
+                              'Por favor, verifica la conexión y vuelve a intentar.\n\n' +
+                              'Error: ' + error.message);
+                    } else {
+                        console.warn('⚠️ Modo desarrollo: Error guardando en servidor local');
+                    }
+                    
+                    return { success: false, error: error.message, savedToServer: false };
                 }
             } else {
-                // Si no hay servidor configurado, solo guardar en localStorage
+                // Si no hay servidor configurado, esto es un error de configuración
+                console.error('❌ ERROR DE CONFIGURACIÓN: No hay servidor configurado');
+                console.error('CONFIG.USE_API:', CONFIG.USE_API, 'CONFIG.API_BASE:', CONFIG.API_BASE);
+                
+                // Guardar en localStorage como último recurso
                 localStorage.setItem('rankingData', JSON.stringify(rankingData));
-                renderPeopleTable();
-                renderAreasTable();
-                console.log('💾 Datos guardados en localStorage (sin servidor configurado)');
-                return { success: true, message: 'Datos guardados en localStorage' };
+                
+                if (typeof renderPeopleTable === 'function') {
+                    renderPeopleTable();
+                    renderAreasTable();
+                }
+                
+                alert('⚠️ ERROR DE CONFIGURACIÓN: No hay servidor configurado.\n\n' +
+                      'Los datos se guardaron localmente, pero NO se sincronizarán con otros dispositivos.\n\n' +
+                      'Por favor, verifica la configuración del servidor.');
+                
+                return { success: false, error: 'No hay servidor configurado', savedToServer: false };
             }
         }
 
