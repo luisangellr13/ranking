@@ -22,19 +22,35 @@
     const RENDER_API_URL = 'https://ranking-81qv.onrender.com';
     
     // Detectar si estamos en producción (no localhost)
+    // GitHub Pages usa dominios como username.github.io o *.github.io
     const isProduction = window.location.hostname !== 'localhost' && 
                         window.location.hostname !== '127.0.0.1' &&
-                        !window.location.hostname.startsWith('192.168.');
+                        !window.location.hostname.startsWith('192.168.') &&
+                        window.location.hostname !== '127.0.0.1' &&
+                        !window.location.hostname.includes('localhost');
     
     // Configuración compartida
+    // Lógica: 
+    // - Si USE_LOCAL_SERVER es true → siempre usa local
+    // - Si USE_LOCAL_SERVER es false y estamos en producción (GitHub Pages) → usa Render
+    // - Si USE_LOCAL_SERVER es false y estamos en desarrollo → usa local
     const CONFIG = {
         ROOT_EMAIL: 'luisangellr13@gmail.com',
         ROOT_PASSWORD: 'Luis1309*',
         DATA_URL: 'assets/data/ranking.json',
-        // Si USE_LOCAL_SERVER es true, usa local. Si es false, usa Render en producción o local en desarrollo
         API_BASE: USE_LOCAL_SERVER ? LOCAL_SERVER_URL : (isProduction ? RENDER_API_URL : LOCAL_SERVER_URL),
         USE_API: true // Siempre usar API
     };
+    
+    // Log adicional para debugging en producción
+    if (isProduction) {
+        console.log('🌐 Modo PRODUCCIÓN detectado:', {
+            hostname: window.location.hostname,
+            USE_LOCAL_SERVER: USE_LOCAL_SERVER,
+            API_BASE: CONFIG.API_BASE,
+            esperado: 'https://ranking-81qv.onrender.com'
+        });
+    }
     
     console.log('🔧 Configuración del servidor:', {
         USE_LOCAL_SERVER: USE_LOCAL_SERVER,
