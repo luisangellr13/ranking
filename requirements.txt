@@ -1,3 +1,0 @@
-# No se requieren dependencias externas para este servidor
-# Python 3 estándar es suficiente
-
